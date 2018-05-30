@@ -1,19 +1,21 @@
-package cdbm.ucab.ingsw.service;
+package ucab.ingsw.service;
 
-import cdbm.ucab.ingsw.command.UserSignUpCommand;
-import cdbm.ucab.ingsw.command.UserLoginCommand;
-import cdbm.ucab.ingsw.command.UserChangingAttributesCommand;
-import cdbm.ucab.ingsw.model.User;
-import cdbm.ucab.ingsw.response.UserResponse;
+import ucab.ingsw.command.UserSignUpCommand;
+import ucab.ingsw.command.UserLoginCommand;
+import ucab.ingsw.command.UserChangingAttributesCommand;
+import ucab.ingsw.model.User;
+import ucab.ingsw.response.UserResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import cdbm.ucab.ingsw.response.NotifyResponse;
-import cdbm.ucab.ingsw.repository.UserRepository;
-import cdbm.ucab.ingsw.response.UserProfileRelatedResponse;
+import ucab.ingsw.response.NotifyResponse;
+import ucab.ingsw.repository.UserRepository;
+
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+
+
+import java.util.List;
 
 @Slf4j
 
@@ -22,6 +24,10 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+
+
+
 
     public ResponseEntity<Object> login(UserLoginCommand command) {
         log.debug("About to process [{}]", command);
@@ -33,6 +39,8 @@ public class UserService {
         } else {
             if (u.getPassword().equals(command.getPassword())) {
                   log.info("Successful login for user={}", u.getId());
+
+
 
                 UserResponse respuesta = new UserResponse();
                 respuesta.setFirstName(u.getFirstName());
@@ -88,10 +96,11 @@ public class UserService {
     //-----------------------------------------------------------------------------------------------------------
 
 
+
     public ResponseEntity<Object> update(UserChangingAttributesCommand command, String id) {
-         log.debug("About to process [{}]", command);
+        log.debug("About to process [{}]", command);
         if (!userRepository.existsById(Long.parseLong(id))) {
-             log.info("Cannot find user with ID={}", id);
+            log.info("Cannot find user with ID={}", id);
             return ResponseEntity.badRequest().body(buildNotifyResponse("id invalido"));
         } else {
             User user = new User();
@@ -104,11 +113,51 @@ public class UserService {
             user.setDateOfBirth(command.getDateOfBirth());
             userRepository.save(user);
 
-               log.info("Updated user with ID={}", user.getId());
+            log.info("Updated user with ID={}", user.getId());
 
             return ResponseEntity.ok().body(buildNotifyResponse("La operación ha sido exitosa."));
         }
     }
+
+
+
+
+
+
+    public List<User> searchByName(String name){
+        List<User> u = userRepository.findByFirstNameIgnoreCaseContaining(name);
+        if(u==null){
+            log.info("No se encontraros usuarios con el nombre : ",name);
+
+        }else
+        log.info("Cantidad de Usuarios encontrados={}", u.size(), name);
+
+
+
+        return u;
+    }
+
+
+
+    public ResponseEntity<Object> delete(UserLoginCommand command,String id) {
+        log.debug("About to process [{}]", command);
+
+        if (userRepository.existsById(Long.parseLong(id))) {
+
+            userRepository.deleteById(Long.parseLong(id));
+            return  ResponseEntity.ok().body(buildNotifyResponse("La operación ha sido exitosa."));
+
+        } else {
+            log.info("Cannot find user with Id={}", id);
+
+            return ResponseEntity.badRequest().body(buildNotifyResponse("Id no válido."));
+            }
+        }
+
+
+
+
+
 
     //-----------------------------------------------------------------------------------------------------------
 

@@ -1,16 +1,19 @@
-package cdbm.ucab.ingsw.controller;
+package ucab.ingsw.controller;
 
-import cdbm.ucab.ingsw.command.UserChangingAttributesCommand;
-import cdbm.ucab.ingsw.command.UserSignUpCommand;
-import cdbm.ucab.ingsw.service.UserService;
+import ucab.ingsw.command.UserChangingAttributesCommand;
+import ucab.ingsw.command.UserSignUpCommand;
+import ucab.ingsw.model.User;
+import ucab.ingsw.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
-import cdbm.ucab.ingsw.command.UserLoginCommand;
+import ucab.ingsw.command.UserLoginCommand;
 
 @Slf4j
 
@@ -21,6 +24,7 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
 
 
     @RequestMapping(value = "/register", consumes = "application/json", method = RequestMethod.POST)
@@ -37,6 +41,19 @@ public class UserController {
     public ResponseEntity update(@Valid @RequestBody UserChangingAttributesCommand command, @PathVariable("id") String id) {
         return userService.update(command, id);
     }
+
+    @RequestMapping(value = "/delete/{id}", consumes = "application/json", method = RequestMethod.DELETE)
+    public ResponseEntity delete(@Valid @RequestBody UserLoginCommand command,@PathVariable("id") String id) {
+        return userService.delete(command,id);
+    }
+
+   @RequestMapping(value = "/search/{firstName}", consumes = "application/json", method = RequestMethod.GET)
+     public List<User> searchByName(@PathVariable("firstName") String firstName) {
+        return userService.searchByName(firstName);
+    }
+
+
+
 
 }
 

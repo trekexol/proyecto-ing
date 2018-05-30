@@ -1,4 +1,4 @@
-package cdbm.ucab.ingsw.response;
+package ucab.ingsw.response;
 
 import lombok.Data;
 import lombok.ToString;

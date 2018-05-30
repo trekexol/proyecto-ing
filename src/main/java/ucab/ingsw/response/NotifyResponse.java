@@ -1,4 +1,4 @@
-package cdbm.ucab.ingsw.response;
+package ucab.ingsw.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
