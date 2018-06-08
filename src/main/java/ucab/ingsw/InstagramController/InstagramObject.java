@@ -1,13 +1,14 @@
 package ucab.ingsw.InstagramController;
 
-/*import java.util.Map;
+import java.util.Map;
 
-import org.jinstagram.http.APILimitUtils;*/
+
+import ucab.ingsw.InstagramController.Exception.ApiLimitsUtils;
 
 
 public abstract class InstagramObject  implements InstagramResponse{
 
-   /* private Map<String, String> headers;
+   private Map<String, String> headers;
 
 
     void setHeaders(Map<String, String> headers){
@@ -21,12 +22,12 @@ public abstract class InstagramObject  implements InstagramResponse{
 
 
     public int getAPILimitStatus(){
-        return APILimitUtils.getAPILimitStatus(this.headers);
+        return ApiLimitsUtils.getAPILimitStatus(this.headers);
     }
 
 
     public int getRemainingLimitStatus(){
-        return APILimitUtils.getRemainingLimitStatus(this.headers);
+        return ApiLimitsUtils.getRemainingLimitStatus(this.headers);
     }
-*/
+
 }

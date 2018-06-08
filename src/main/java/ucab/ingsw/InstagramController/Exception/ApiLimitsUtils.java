@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-final class ApiLimitsUtils {
+public final class ApiLimitsUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiLimitsUtils.class);
 

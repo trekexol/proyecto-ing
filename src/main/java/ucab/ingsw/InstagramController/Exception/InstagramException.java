@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import ucab.ingsw.InstagramController.InstagramResponse;
-import ucab.ingsw.InstagramController.Exception.ApiLimitsUtils;
-
 
 
 public class InstagramException extends IOException implements InstagramResponse {

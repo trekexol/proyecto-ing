@@ -1,0 +1,11 @@
+package ucab.ingsw.InstagramController.model;
+
+public final class Constants {
+    public static final String BASE_URI = "https://api.instagram.com";
+
+    public static final String VERSION = "v1";
+
+    public static final String API_URL = String.format("%s/%s", BASE_URI, VERSION);
+
+    public static final String OEMBED_URL = BASE_URI;
+}
