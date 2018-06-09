@@ -1,23 +1,26 @@
 package ucab.ingsw.InstagramController;
 
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang3.StringUtils;
-/*
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-*/
+
 import ucab.ingsw.InstagramController.Exception.InstagramException;
+import ucab.ingsw.InstagramController.common.InstagramErrorResponse;
 //import org.jinstagram.http.Request;
 import ucab.ingsw.InstagramController.model.Response;
 import ucab.ingsw.InstagramController.http.URLUtils;
 import ucab.ingsw.InstagramController.http.Verbs;
 import ucab.ingsw.InstagramController.model.Methods;
 import ucab.ingsw.InstagramController.model.QueryParam;
-/*import org.jinstagram.model.Relationship;
-import org.jinstagram.utils.LogHelper;
-import org.jinstagram.utils.PaginationHelper;
-import org.jinstagram.utils.Preconditions;*/
+import ucab.ingsw.InstagramController.http.Request;
+//import org.jinstagram.model.Relationship;
+import ucab.ingsw.InstagramController.Utils.LogHelper;
+//import org.jinstagram.utils.PaginationHelper;
 import ucab.ingsw.InstagramController.Utils.Precondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +48,7 @@ public class InstagramBase implements InstagramClient {
     }
 
     public InstagramBase(InstagramConfig config) {
-       // Precondition.checkNotNull(config, "config cannot be null");
+        Precondition.checkNotNull(config, "config cannot be null");
         this.config = config;
     }
 
@@ -100,30 +103,76 @@ public class InstagramBase implements InstagramClient {
                 }
             }
 
-            jsonResponseBody = response.getBody();
-        //    LogHelper.prettyPrintJSONResponse(logger, jsonResponseBody);
+           jsonResponseBody = response.getBody();
+           LogHelper.prettyPrintJSONResponse(logger, jsonResponseBody);
         } catch (IOException e) {
-           // throw new InstagramException("IOException while retrieving data", e);
+            throw new InstagramException("IOException while retrieving data", e);
         }
 
-      //  Map<String, String> responseHeaders = response.getHeaders();
-      //  if (response.getCode() >= 200 && response.getCode() < 300) {
-          //  T object = createObjectFromResponse(clazz, jsonResponseBody);
-        //    object.setHeaders(responseHeaders);
-       //     return object;
-      //  }
+       Map<String, String> responseHeaders = response.getHeaders();
+       if (response.getCode() >= 200 && response.getCode() < 300) {
+           T object = createObjectFromResponse(clazz, jsonResponseBody);
+              object.setHeaders(responseHeaders);
+           return object; // hasta aca fino mrko
+        }
 
-       // throw handleInstagramError(response.getCode(), jsonResponseBody, responseHeaders);
-        return null;
+       throw handleInstagramError(response.getCode(), jsonResponseBody, responseHeaders);
+
     }
 
     protected Response getApiResponse(Verbs verb, String methodName, String rawMethodName, Map<String, String> params) throws IOException {
-     //   Request request=request(verb, methodName, rawMethodName, params);
+        Request request=request(verb, methodName, rawMethodName, params);
         logger.debug("Sending request to Instagram...");
       //  Response response=request.send();
      //   return response;
         return null;
     }
+
+
+    protected Request request(Verbs verb, String methodName, String rawMethodName, Map<String, String> params) throws InstagramException {
+        String apiResourceUrl = config.getApiURL() + methodName;
+        Request request = new Request(verb, apiResourceUrl);
+
+        logger.debug("Creating request for Instagram -  " + request.getUrl());
+
+        configureConnectionSettings(request, config); //aqui quede y funciona 09/06 13:33
+
+      /*  if (requestProxy != null) {
+            request.setProxy(requestProxy);
+        }
+
+        // Additional parameters in url
+        if (params != null) {
+
+            params.remove(QueryParam.SIGNATURE); // needs to be recalculated last for every request
+
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                if (verb == Verbs.GET) {
+                    request.addQuerystringParameter(entry.getKey(), entry.getValue());
+                } else {
+                    request.addBodyParameter(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        return request;
+        */
+
+      return null;
+    }
+
+    public static void configureConnectionSettings(final Request request, final InstagramConfig config) {
+        request.setConnectTimeout(config.getConnectionTimeoutMills(), TimeUnit.MILLISECONDS);
+        request.setReadTimeout(config.getReadTimeoutMills(), TimeUnit.MILLISECONDS);
+
+        // #51 Connection Keep Alive
+        request.setConnectionKeepAlive(config.isConnectionKeepAlive());
+    }
+
+
+
+
+
 
     private boolean wasResponseAnError(Response response) {
         return (response.getCode() >= 200 && response.getCode() < 300) || response.getCode() >= 500;
@@ -131,7 +180,7 @@ public class InstagramBase implements InstagramClient {
 
 
     private Exception testResponseBody(Response response) {
-      /*  Exception capturedException = null;
+       Exception capturedException = null;
         int code = response.getCode();
 
         try {
@@ -160,9 +209,52 @@ public class InstagramBase implements InstagramClient {
             capturedException = e;
         }
 
-        return capturedException;*/
-      return null;
+        return capturedException;
+      //*******************************************************************
     }
+
+
+    public static <T> T createObjectFromResponse(Class<T> clazz, final String response) throws InstagramException {
+        Gson gson = new Gson();
+        T object;
+
+        try {
+            object = gson.fromJson(response, clazz);
+        } catch (Exception e) {
+            throw new InstagramException("Error parsing json to object type " + clazz.getName(), e);
+        }
+
+        return object;
+    }
+
+    protected InstagramException handleInstagramError(long responseCode, String responseBody,
+                                                      Map<String, String> responseHeaders) throws InstagramException {
+        Gson gson = new Gson();
+        final InstagramErrorResponse error;
+        try {
+            if (responseCode == 400) {
+                error = InstagramErrorResponse.parse(gson, responseBody);
+                error.setHeaders(responseHeaders);
+                error.throwException();
+            }
+
+            // sending too many requests too quickly;
+            // limited to 5000 requests per hour per access_token or client_id
+            // overall. (according to spec)
+            else if (responseCode == 429) {
+                error = InstagramErrorResponse.parse(gson, responseBody);
+                error.setHeaders(responseHeaders);
+                error.throwException();
+            }
+        } catch (JsonSyntaxException e) {
+            throw new InstagramException("Failed to decode error response " + responseBody, e, responseHeaders);
+        }
+        throw new InstagramException("Unknown error response code: " + responseCode + " " + responseBody,
+                responseHeaders);
+
+
+    } //**********************************************************************
+
 
 
 }

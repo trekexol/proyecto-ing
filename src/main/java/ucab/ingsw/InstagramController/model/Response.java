@@ -91,5 +91,9 @@ public class Response {
         return stream;
     }
 
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
 
 }
