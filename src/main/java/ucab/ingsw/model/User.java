@@ -11,15 +11,25 @@ import java.io.Serializable;
 public class User  implements Serializable {
     @Id
     private long id;
+    private String Token;
 
     private String firstName;
     private String lastName;
     private String email;
     private String password;
     private String dateOfBirth;
+    private List<Long> albumes = new ArrayList<>();
+    private List<Long> socialFriends = new ArrayList<>();
 
     public void setId(long id) {
         this.id = id;
+    }
+    public String getToken() {
+        return Token;
+    }
+
+    public void setToken(String token) {
+        Token = token;
     }
 
     public void setFirstName(String firstName) {
@@ -65,4 +75,19 @@ public class User  implements Serializable {
     public String getDateOfBirth() {
         return dateOfBirth;
     }
-}
+
+    public List<Long> getAlbumes() {
+        return albumes;
+    }
+
+    public void setAlbumes(List<Long> albumes) {
+        this.albumes = albumes;
+    }
+
+    public List<Long> getSocialFriends() {
+        return socialFriends;
+    }
+
+    public void setSocialFriends(List<Long> socialFriends) {
+        this.socialFriends = socialFriends;
+    }
